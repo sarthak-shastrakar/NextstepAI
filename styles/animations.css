@@ -1,0 +1,107 @@
+
+/* Container covering full viewport */
+.rain-container {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Individual rain particle — Light theme */
+.rain-drop {
+  position: absolute;
+  top: -15%;
+  width: 1.5px;
+  height: 16px;
+  border-radius: 5px;
+  background: linear-gradient(
+    to bottom,
+    rgba(79, 70, 229, 0),
+    rgba(79, 70, 229, 0.25)
+  );
+  opacity: 0.2;
+  box-shadow: 0 0 4px rgba(79, 70, 229, 0.15);
+  filter: blur(0.3px);
+  animation:
+    rainFall linear infinite,
+    rainGlow ease-in-out infinite;
+}
+
+/* Falling motion */
+@keyframes rainFall {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(120vh);
+    opacity: 0;
+  }
+}
+
+/* Light glow pulse */
+@keyframes rainGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 3px rgba(79, 70, 229, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 8px rgba(79, 70, 229, 0.25);
+  }
+}
+
+/* Sapphire Glass Utilities */
+.glass-sapphire {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 8px 32px 0 rgba(31, 38, 135, 0.07),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.glass-sapphire-strong {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(30px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(79, 70, 229, 0.1);
+}
+
+.glow-sapphire {
+  box-shadow: 0 0 40px -10px rgba(79, 70, 229, 0.3);
+}
+
+.animate-floating {
+  animation: floating 3s ease-in-out infinite;
+}
+
+@keyframes floating {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.gradient-border {
+  position: relative;
+  border-radius: inherit;
+}
+
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(45deg, rgba(79, 70, 229, 0.5), rgba(99, 102, 241, 0.1), rgba(16, 185, 129, 0.5));
+  border-radius: inherit;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+}
+
