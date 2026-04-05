@@ -2,14 +2,9 @@
 
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { db } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY,
-  baseURL: "https://openrouter.ai/api/v1",
-});
+// import { db } from "@/lib/prisma";
+// import { auth } from "@clerk/nextjs/server";
+import { runAI } from "@/lib/ai-service";
 
 export async function GenerateCoverLetter(data) {
   const { userId } = await auth();
@@ -21,15 +16,15 @@ export async function GenerateCoverLetter(data) {
 
   if (!user) throw new Error("User not found");
 
-  const prompt = `Input: Job:${data.jobTitle} @ ${data.companyName}, Industry:${user.industry}, Exp:${user.experience}, Skills:${user.skills}, Bio:${user.bio}. Desc:${data.jobDescription}. Task: Write professional cover letter (Markdown). Rules: Concise (<250 words), Enthusiastic, Achievements-focused, Letter format, 0 preamble.`;
+  const task = `Write a professional cover letter for ${data.jobTitle} at ${data.companyName}.`;
+  const inputData = `Industry: ${user.industry}, Experience: ${user.experience}yrs, Skills: ${user.skills.join(", ")}, Bio: ${user.bio}, Job Description: ${data.jobDescription}`;
 
   try {
-    const result = await openai.chat.completions.create({
-      model: "google/gemma-2-9b-it:free",
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: 450,
+    const response = await runAI(task, inputData, {
+      maxTokens: 500,
     });
-    const content = result.choices[0].message.content.trim();
+
+    const content = typeof response === 'string' ? response : (response.coverLetter || response.content || JSON.stringify(response));
 
 
     const coverLetter = await db.coverLetter.create({

@@ -25,6 +25,24 @@ export default function RootLayout({ children }) {
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning={true}>
+
+          {/* ✅ ADD HEAD SECTION */}
+        <head>
+          <Script
+            src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
+            strategy="afterInteractive"
+          />
+          <Script id="onesignal-init" strategy="afterInteractive">
+            {`
+              window.OneSignalDeferred = window.OneSignalDeferred || [];
+              OneSignalDeferred.push(function(OneSignal) {
+                OneSignal.init({
+                  appId: "f3ee049a-82f1-4439-af74-b949b3aa0e65",
+                });
+              });
+            `}
+          </Script>
+        </head>
         <body className={`${inter.className}`}>
           <ThemeProvider
             attribute="class"

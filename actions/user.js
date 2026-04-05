@@ -76,7 +76,19 @@ export async function getUserOnboardingStatus() {
     };
   } catch (error) {
     console.warn("Database connection issue. Returning default onboarding status:", error.message);
-    // Return a default state instead of crashing the page if the DB is busy
     return { isOnboarded: false };
   }
+}
+
+export async function getUserProfile() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
+
+  if (!user) throw new Error("User not found");
+
+  return user;
 }

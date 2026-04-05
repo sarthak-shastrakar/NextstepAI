@@ -11,6 +11,8 @@ const client = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
 });
 
+import { runAI } from "@/lib/ai-service";
+
 export async function saveResume(content) {
   const user = await checkUser();
 
@@ -55,18 +57,12 @@ export async function improveWithAI({ current, type }) {
 
   if (!user) throw new Error("User not found");
 
-  const prompt = `Input: Type:${type}, Industry:${user.industry}, Text:"${current}". Task: Improve for resume. Rules: Action verbs, Measurable results, Concise (1 para), Industry keywords, 0 preamble.`;
+  const task = `Improve ${type} for resume using action verbs, measurable results, and industry keywords. Be concise (1 paragraph).`;
+  const data = `Industry: ${user.industry}, Current Text: "${current}"`;
 
   try {
-    const result = await client.chat.completions.create({
-      model: "google/gemma-2-9b-it:free",
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: 200,
-    });
-
-    console.log(result.usage)
-    const improvedContent = result.choices[0].message.content.trim();
-    return improvedContent;
+    const response = await runAI(task, data, { maxTokens: 250, isText: true });
+    return response;
   } catch (error) {
     console.error("Error improving content:", error);
     throw new Error("Failed to improve content");
@@ -78,21 +74,14 @@ export async function getATSScore(resumeContent) {
 
   if (!user) throw new Error("User not found");
 
-  const prompt = `Input: Industry:${user.industry}, Resume:"${resumeContent}". Task: ATS Evaluation. Output: JSON {score(0-100), summary, strengths:[], weaknesses:[], suggestions:[], missingKeywords:[]}. Rules: Critical, JSON ONLY.`;
+  const task = "Evaluate resume for ATS.";
+  const data = `Industry: ${user.industry}, Resume: "${resumeContent}"`;
 
+  // Check if we should consolidated it, but for now just optimize
   try {
-    const result = await client.chat.completions.create({
-      model: "google/gemma-2-9b-it:free",
-      messages: [
-        { role: "system", content: "Expert ATS analyzer. Strict JSON." },
-        { role: "user", content: prompt },
-      ],
-      response_format: { type: "json_object" },
-      max_tokens: 500,
+    const analysis = await runAI(task, data, {
+      maxTokens: 500,
     });
-
-
-    const analysis = JSON.parse(result.choices[0].message.content);
     return analysis;
   } catch (error) {
     console.error("Error getting ATS score:", error);
@@ -105,20 +94,41 @@ export async function generateSummary({ skills, experience }) {
 
   if (!user) throw new Error("User not found");
 
-  const prompt = `Input: Industry:${user.industry}, Skills:${skills}, Exp:${JSON.stringify(experience)}. Task: Write 3-4 sentence resume summary. Rules: Measurable impact, No preamble, ONLY text.`;
+  const task = "Write a 3-4 sentence professional resume summary with measurable impact. No preamble, only the summary text.";
+  const data = `Industry: ${user.industry}, Skills: ${skills}, Experience: ${JSON.stringify(experience)}`;
 
   try {
-    const result = await client.chat.completions.create({
-      model: "google/gemma-2-9b-it:free",
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: 300,
-    });
-
-
-    const summary = result.choices[0].message.content.trim();
-    return summary;
+    const response = await runAI(task, data, { maxTokens: 300, isText: true });
+    return response;
   } catch (error) {
     console.error("Error generating summary:", error);
     throw new Error("Failed to generate summary. Please try again.");
+  }
+}
+
+/**
+ * Consolidated Resume Analysis: ONE call for all resume metadata
+ */
+export async function analyzeResume(resumeContent) {
+  const user = await checkUser();
+  if (!user) throw new Error("User not found");
+
+  const task = `Perform comprehensive resume analysis. Return: improvedResume, summary, score (0-100), and improvementTips (array).`;
+  const data = `Industry: ${user.industry}, ResumeContent: "${resumeContent}"`;
+
+  try {
+    const response = await runAI(task, data, {
+      maxTokens: 800,
+    });
+    
+    return {
+      improvedResume: response.improvedResume || "",
+      summary: response.summary || "",
+      score: response.score || 0,
+      tips: response.improvementTips || response.tips || [],
+    };
+  } catch (error) {
+    console.error("Error analyzing resume:", error);
+    throw new Error("Failed to perform comprehensive resume analysis.");
   }
 }

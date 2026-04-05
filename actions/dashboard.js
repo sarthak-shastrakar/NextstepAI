@@ -2,26 +2,18 @@
 
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import OpenAI from "openai";
-
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY,
-  baseURL: "https://openrouter.ai/api/v1",
-});
+import { runAI } from "@/lib/ai-service";
 
 export const generateAIInsights = async (industry) => {
-  const prompt = `Input: Industry:${industry}. Task: Analyze industry state. Output: JSON {salaryRanges:[{role, min, max, median, location}], growthRate(%), demandLevel(HIGH/MEDIUM/LOW), topSkills, marketOutlook(POSITIVE/NEUTRAL/NEGATIVE), keyTrends, recommendedSkills}. Rules: JSON ONLY, No preamble.`;
+  const task = `Analyze current industry state for ${industry}.`;
+  const data = `Industry: ${industry}`;
 
   try {
-    const result = await openai.chat.completions.create({
-      model: "google/gemma-2-9b-it:free",
-      messages: [{ role: "user", content: prompt + " Keep text very brief." }],
-      response_format: { type: "json_object" },
-      max_tokens: 400,
+    const insights = await runAI(task, data, {
+      maxTokens: 400,
     });
     
-    return JSON.parse(result.choices[0].message.content);
+    return insights;
 
   } catch (error) {
     console.error("AI Insight Generation Error:", error);
