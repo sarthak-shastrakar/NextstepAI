@@ -45,7 +45,7 @@ const ReviewCard = ({ review, currentUserId, onDelete }) => {
         {/* Thin Premium Shimmer at top */}
         <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
-        <CardContent className="p-10 h-full flex flex-col justify-between relative z-20">
+        <CardContent className="p-6 md:p-10 h-full flex flex-col justify-between relative z-20">
           
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -90,8 +90,8 @@ const ReviewCard = ({ review, currentUserId, onDelete }) => {
             </div>
             
             <div className="relative">
-              <Quote className="absolute -top-6 -left-8 h-12 w-12 text-primary/5 -z-0" />
-              <p className="text-slate-800 text-lg font-bold leading-relaxed relative z-10 tracking-tight italic">
+              <Quote className="absolute -top-4 -left-4 md:-top-6 md:-left-8 h-8 w-8 md:h-12 md:w-12 text-primary/5 -z-0" />
+              <p className="text-slate-800 text-base md:text-lg font-bold leading-relaxed relative z-10 tracking-tight italic">
                 &quot;{review.quote}&quot;
               </p>
             </div>
@@ -136,8 +136,8 @@ const ReviewGrid = ({ reviews, currentUserId, onDelete }) => {
   if (!reviews || reviews.length === 0) return null;
 
   return (
-    <div className="container mx-auto px-4 py-16">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+    <div className="container mx-auto px-4 py-8 md:py-16">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-7xl mx-auto">
         <AnimatePresence mode="popLayout">
           {reviews.map((review) => (
             <ReviewCard 

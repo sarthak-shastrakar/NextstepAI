@@ -521,3 +521,61 @@
   mask-composite: exclude;
   pointer-events: none;
 }
+
+/* ── Print / PDF Styles ─────────────────────────────── */
+@media print {
+  /* Hide everything except the resume */
+  body > *:not(#__NEXT_DATA__) {
+    display: none !important;
+  }
+
+  /* Show only the print root */
+  #resume-print-root {
+    display: block !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 10pt !important;
+    transform: none !important;
+    page-break-inside: avoid;
+  }
+
+  /* Force white background, black text on all elements */
+  #resume-print-root * {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Keep colored backgrounds for section highlights */
+  #resume-print-root [class*="bg-slate-50"],
+  #resume-print-root [class*="bg-primary"],
+  #resume-print-root [class*="bg-emerald"],
+  #resume-print-root [class*="bg-blue"] {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+}
+
+/* ── Mobile Overflow Safety ─────────────────────────── */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Extra bottom space on mobile so content doesn't hide behind the fixed bottom bar */
+@media (max-width: 1023px) {
+  .pb-mobile-bar {
+    padding-bottom: 80px;
+  }
+}

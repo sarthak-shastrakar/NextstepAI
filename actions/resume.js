@@ -24,11 +24,11 @@ export async function saveResume(content) {
         userId: user.id,
       },
       update: {
-        content,
+        content: content || "",
       },
       create: {
         userId: user.id,
-        content,
+        content: content || "",
       },
     });
 
@@ -45,11 +45,13 @@ export async function getResume() {
 
   if (!user) return null;
 
-  return await db.resume.findUnique({
+  const resume = await db.resume.findUnique({
     where: {
       userId: user.id,
     },
   });
+
+  return { resume, user };
 }
 
 export async function improveWithAI({ current, type }) {

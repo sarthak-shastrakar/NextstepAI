@@ -78,26 +78,26 @@ const Herosection = () => {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="flex flex-col items-center text-center space-y-10"
+          className="flex flex-col items-center text-center space-y-8 md:space-y-10"
         >
           {/* Badge */}
           <motion.div variants={itemVariants}>
-            <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-white border border-border/60 shadow-sm text-primary text-xs font-bold tracking-[0.15em] uppercase">
+            <div className="inline-flex items-center gap-2.5 px-4 md:px-5 py-2 rounded-full bg-white border border-border/60 shadow-sm text-primary text-[10px] md:text-xs font-bold tracking-[0.15em] uppercase">
               <Sparkles className="h-3.5 w-3.5" />
               The Future of Career Growth
             </div>
           </motion.div>
 
           {/* Heading */}
-          <motion.div variants={itemVariants} className="space-y-6 max-w-5xl mx-auto">
-            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-[-0.04em] leading-[0.95] text-foreground">
+          <motion.div variants={itemVariants} className="space-y-4 md:space-y-6 max-w-5xl mx-auto px-2">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-[-0.04em] leading-[1.1] md:leading-[0.95] text-foreground">
               Elevate Your Career with
-              <span className="block mt-3 gradient-text-hero">
+              <span className="block mt-2 md:mt-3 gradient-text-hero">
                 NextStep AI
               </span>
             </h1>
 
-            <p className="mx-auto max-w-[720px] text-lg md:text-xl text-muted-foreground leading-relaxed tracking-tight">
+            <p className="mx-auto max-w-[720px] text-base md:text-xl text-muted-foreground leading-relaxed tracking-tight px-4">
               Master your industry with AI-driven insights, personalized resume
               building, and real-world interview preparation tailored for the
               modern professional.

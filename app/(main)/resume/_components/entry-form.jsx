@@ -55,6 +55,7 @@ export function EntryForm({ type, entries, onChange }) {
     defaultValues: {
       title: "",
       organization: "",
+      link: "",
       startDate: "",
       endDate: "",
       description: "",
@@ -149,7 +150,7 @@ export function EntryForm({ type, entries, onChange }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {entries.map((item, index) => (
           <Card key={index} className="card-premium group relative overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
@@ -198,7 +199,7 @@ export function EntryForm({ type, entries, onChange }) {
             <CardTitle>Add {type}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">{config.titleLabel}</label>
                 <Input
@@ -225,7 +226,7 @@ export function EntryForm({ type, entries, onChange }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Start Date</label>
                 <Input
@@ -273,7 +274,6 @@ export function EntryForm({ type, entries, onChange }) {
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Description</label>
-                <Badge variant="outline" className="text-[10px] h-4 bg-muted/50 border-none text-muted-foreground uppercase font-bold tracking-tighter">Optional</Badge>
               </div>
               <Textarea
                 placeholder={config.descPlaceholder}
@@ -307,11 +307,11 @@ export function EntryForm({ type, entries, onChange }) {
               )}
             </Button>
           </CardContent>
-          <CardFooter className="flex justify-end space-x-2 pt-2">
+          <CardFooter className="flex flex-wrap justify-end gap-2 pt-2">
             <Button
               type="button"
               variant="ghost"
-              className="rounded-xl font-medium"
+              className="rounded-xl font-medium flex-1 sm:flex-none"
               onClick={() => {
                 reset();
                 setIsAdding(false);
@@ -321,7 +321,7 @@ export function EntryForm({ type, entries, onChange }) {
             </Button>
             <Button 
               type="button" 
-              className="rounded-xl btn-premium-glow shadow-lg shadow-primary/10 px-8 font-bold transition-all hover:scale-[1.02] active:scale-[0.98]" 
+              className="rounded-xl btn-premium-glow shadow-lg shadow-primary/10 px-6 font-bold transition-all hover:scale-[1.02] active:scale-[0.98] flex-1 sm:flex-none" 
               onClick={handleAdd}
             >
               <PlusCircle className="h-4 w-4 mr-2" />

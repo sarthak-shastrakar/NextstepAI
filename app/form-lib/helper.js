@@ -14,3 +14,13 @@ export function entriesToMarkdown(entries, type) {
       .join("\n\n")
   );
 }
+
+// Utility to parse description text into bullet points
+export function parseBulletPoints(text) {
+  if (!text) return [];
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .map((line) => line.replace(/^[-*•]\s?/, ""));
+}
