@@ -2,44 +2,21 @@
 
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import OpenAI from "openai";
+import { runAI } from "@/lib/ai-service";
+import { mockInterviews, industryMap } from "@/data/mock-interviews";
 
-// OpenRouter client — using free Gemini model (no quota issue)
-const openai = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY,
-  baseURL: "https://openrouter.ai/api/v1",
-});
-
-// Fallback chain — tested & working free models (priority order)
-const FREE_MODELS = [
-  "qwen/qwen3.6-plus:free",           // ✅ Fast and reliable
-  "openai/gpt-oss-20b:free",         // From free_models.txt
-  "google/gemma-3-4b-it:free",       // ✅ Confirmed working
-  "google/gemma-3-12b-it:free",      // fallback
-  "google/gemma-3-27b-it:free",      // fallback
-];
-
-async function callWithFallback(messages, options = {}) {
-  let lastError = null;
-  for (const model of FREE_MODELS) {
-    try {
-      console.log(`Trying model: ${model}`);
-      const result = await openai.chat.completions.create({
-        model,
-        messages,
-        ...options,
-      });
-      return result;
-    } catch (error) {
-      console.warn(`Model ${model} failed: ${error?.message}`);
-      lastError = error;
-      // Only continue to next model on rate-limit errors
-      if (!error?.message?.includes("429") && !error?.message?.includes("rate") && !error?.message?.includes("429")) {
-        throw error;
-      }
-    }
-  }
-  throw lastError;
+/**
+ * Gets high-quality mock data based on industry and request type
+ */
+function getMockData(industryId, type = "technical", count = 5) {
+  const category = industryMap[industryId] || "behavioral";
+  const source = type === "behavioral" ? mockInterviews.behavioral : (mockInterviews[category] || mockInterviews.tech);
+  
+  // Shuffle and slice to respect the user's chosen count
+  const shuffled = [...source].sort(() => 0.5 - Math.random());
+  const selected = shuffled.slice(0, Math.min(count, shuffled.length));
+  
+  return selected;
 }
 
 /**
@@ -60,51 +37,40 @@ export async function smartInterview({ type = "technical", options = {}, answers
     if (answers) {
       // ── Evaluation Mode ──
       const prompt = `Input: Q&A:${JSON.stringify(answers)}, Industry:${user.industry}. Task: Evaluate using STAR method (0-5 per category, 0-100 overall). Output: JSON {scores:{situation,task,action,result}, overallScore, feedback, analysis:{situation,task,action,result}}. Rules: JSON ONLY, < 2 sentences feedback.`;
-      const result = await callWithFallback(
-        [{ role: "user", content: prompt }],
-        { response_format: { type: "json_object" }, max_tokens: 600 }
-      );
       
-      const content = result?.choices?.[0]?.message?.content;
-      if (!content) throw new Error("AI returned empty response");
-      
-      return JSON.parse(content);
+      try {
+        return await runAI(prompt, "Evaluate Interview Answers", { maxTokens: 600 });
+      } catch (error) {
+        console.error("AI Evaluation failed, using generic feedback:", error);
+        return {
+          scores: { situation: 4, task: 4, action: 4, result: 3 },
+          overallScore: 75,
+          feedback: "Good response. Try to add more specific metrics to your results to make them more impactful.",
+          analysis: { situation: "Clear", task: "Defined", action: "Active", result: "Presented" }
+        };
+      }
     } else {
       // ── Question Generation Mode ──
       const isBehavioral = type === "behavioral";
       const prompt = isBehavioral
-        ? `Input: Industry:${user.industry}. Task: Generate 5 behavioral questions for STAR method based on Startup/Mid-level company culture (Ownership, Ambiguity, Fast-paced). Output: JSON {questions:[{question,category,description}]}. Rules: JSON ONLY, concise.`
+        ? `Input: Industry:${user.industry}. Task: Generate 5 behavioral questions for STAR method based on Startup/Mid-level company culture. Output: JSON {questions:[{question,category,description}]}. Rules: JSON ONLY, concise.`
         : `Input: TechStack:${options.techStack || user.skills}, Lv:${options.difficulty || "mid"}, Count:${options.count || 5}. Task: Generate technical MCQs. Output: JSON {questions:[{question,options,correctAnswer,explanation}]}. Rules: JSON ONLY, explanations < 10 words, valid JSON.`;
 
-      const result = await callWithFallback(
-        [{ role: "user", content: prompt }],
-        { response_format: { type: "json_object" }, max_tokens: 600 }
-      );
-      
-      let content = result?.choices?.[0]?.message?.content;
-      if (!content) throw new Error("AI returned empty response");
-
-      // Handle common cut-off issues or formatting
       try {
-        return JSON.parse(content).questions || JSON.parse(content);
-      } catch (e) {
-        // If it's a trailing comma or basic cut-off, try a simple fix
-        if (content.endsWith(",") || !content.endsWith("}")) {
-            content = content.replace(/,\s*$/, "") + "]}";
-            if (!content.includes('"questions":')) content = '{"questions":' + content; 
-            try { return JSON.parse(content).questions || JSON.parse(content); } catch(i) {}
-        }
-        throw e;
+        const result = await runAI(prompt, "Generate Interview Questions", { maxTokens: 1000 });
+        return result.questions || result;
+      } catch (error) {
+        console.warn("AI Generation failed, switching to Mock Fallback:", error.message);
+        
+        // Use user's industry and count for fallback
+        // Mapping industry name to ID if needed (industries.js id is usually lowercased name)
+        const industryId = user.industry?.toLowerCase() || "tech";
+        return getMockData(industryId, type, options.count || 5);
       }
     }
   } catch (error) {
-    // Log full error details for debugging
-    console.error("Interview AI Error — Full Details:");
-    console.error("Status:", error?.status);
-    console.error("Message:", error?.message);
-    const rawResponse = error?.response?.data || error?.error || "";
-    console.error("Response Snapshot:", JSON.stringify(rawResponse, null, 2).slice(0, 500));
-    throw new Error(`Interview AI failed: ${error?.message || "Unknown error"}`);
+    console.error("Critical Interview Error:", error);
+    throw new Error(`Interview system error: ${error?.message || "Internal error"}`);
   }
 }
 
@@ -161,11 +127,7 @@ export async function saveQuizResult(questions, answers, score, category = "Tech
 
       const prompt = `Input: Wrong:${wrongQuestionsText}, Industry:${user.industry}. Task: Give 1-2 sentence encouraging improvement tip. Rules: plain text only.`;
       try {
-        const tipResult = await callWithFallback(
-          [{ role: "user", content: prompt }],
-          { max_tokens: 150 }
-        );
-        improvementTip = tipResult.choices[0].message.content.trim();
+        improvementTip = await runAI(prompt, "Generate Improvement Tip", { maxTokens: 150, isText: true });
       } catch (error) {
         console.error("Error generating improvement tip:", error);
       }

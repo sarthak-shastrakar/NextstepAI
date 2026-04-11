@@ -19,6 +19,19 @@ import { features } from "@/data/features";
 import { howItWorks } from "@/data/howItWorks";
 import { testimonial } from "@/data/testimonial";
 import { faqs } from "@/data/faqs";
+import { getReviews, deleteReview } from "@/actions/review";
+import ReviewGrid from "@/components/ReviewGrid";
+import { Loader2, Send, Quote, Trash2 } from "lucide-react";
+import { format } from "date-fns";
+import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/nextjs";
+import ReviewForm from "@/components/ReviewForm";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const CountUp = ({ to, suffix = "", duration = 2 }) => {
   const nodeRef = useRef(null);
@@ -56,6 +69,51 @@ const staggerContainer = {
 };
 
 export default function Home() {
+  const { user: clerkUser } = useUser();
+  const [reviews, setReviews] = React.useState([]);
+  const [isReviewModalOpen, setIsReviewModalOpen] = React.useState(false);
+  const [isLoadingReviews, setIsLoadingReviews] = React.useState(true);
+
+  const fetchReviews = async () => {
+    setIsLoadingReviews(true);
+    try {
+      const fetchedReviews = await getReviews();
+      if (fetchedReviews && fetchedReviews.length > 0) {
+        const formattedReviews = fetchedReviews.map((r) => ({
+          id: r.id,
+          clerkUserId: r.user.clerkUserId,
+          quote: r.content,
+          author: r.user.name,
+          image: r.user.imageUrl || "https://randomuser.me/api/portraits/lego/1.jpg",
+          role: r.user.industry || "Professional",
+          company: format(new Date(r.createdAt), "MMM d, yyyy"),
+          rating: r.rating,
+        }));
+        setReviews(formattedReviews);
+      } else {
+        setReviews([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch reviews:", error);
+      setReviews([]); 
+    } finally {
+      setIsLoadingReviews(false);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    try {
+      await deleteReview(reviewId);
+      await fetchReviews();
+    } catch (error) {
+      console.error("Delete failed:", error);
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    fetchReviews();
+  }, []);
   return (
     <main className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <Herosection />
@@ -201,60 +259,90 @@ export default function Home() {
       </section>
 
       {/* ═══ Testimonials Section ═══════════════════════ */}
-      <section className="w-full py-24 md:py-32 section-primary">
-        <div className="container mx-auto px-4">
+      <section className="w-full py-32 section-primary relative overflow-hidden">
+        <div className="container mx-auto px-4 relative">
           <motion.div 
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
-            className="text-center max-w-3xl mx-auto mb-16 space-y-5"
+            className="text-center max-w-4xl mx-auto mb-20 space-y-6"
           >
-            <Badge variant="outline" className="px-5 py-1.5 border-primary/20 text-primary bg-accent font-bold tracking-[0.15em] uppercase text-[10px] rounded-full">
-              Proof of Impact
-            </Badge>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-[-0.03em] text-foreground">Success Stories.</h2>
+            <div className="flex justify-center mb-4">
+              <Badge variant="outline" className="px-6 py-2 border-primary/20 text-primary bg-primary/5 font-black tracking-[0.2em] uppercase text-[10px] rounded-full shadow-sm">
+                Industry Proof
+              </Badge>
+            </div>
+            <h2 className="text-5xl md:text-7xl font-extrabold tracking-tighter text-slate-900 leading-[1.1]">
+              Engineered for <br/> <span className="gradient-primary">Real Career Shifts.</span>
+            </h2>
+            <p className="text-slate-500 text-lg md:text-xl font-medium max-w-2xl mx-auto">
+              Join thousands of professionals who have redefined their career narratives using our strategic AI platform.
+            </p>
           </motion.div>
 
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto"
-          >
-            {testimonial.map((testimonial, index) => (
-              <motion.div key={index} variants={fadeIn} whileHover={{ y: -6 }} className="transition-all duration-300">
-                <Card className="card-premium group h-full">
-                  <CardContent className="p-8 space-y-6 flex flex-col justify-between h-full">
-                    <div className="space-y-5">
-                      <div className="flex gap-1">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                        ))}
-                      </div>
-                      <blockquote className="text-foreground/90 italic text-lg leading-relaxed">
-                        &quot;{testimonial.quote}&quot;
-                      </blockquote>
-                    </div>
-                    <div className="flex items-center space-x-4 pt-5 border-t border-border/50">
-                      <Image
-                        src={testimonial.image}
-                        alt={testimonial.author}
-                        width={48}
-                        height={48}
-                        className="rounded-full border-2 border-primary/10 object-cover"
-                      />
-                      <div>
-                        <p className="font-bold text-foreground text-base tracking-tight">{testimonial.author}</p>
-                        <p className="text-sm text-muted-foreground">{testimonial.role} at {testimonial.company}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </motion.div>
+          <div className="relative -mx-4 md:-mx-10 min-h-[300px] flex items-center justify-center">
+            {isLoadingReviews ? (
+              <div className="flex flex-col items-center gap-4 py-20">
+                <Loader2 className="h-10 w-10 animate-spin text-primary/40" />
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Synchronizing Legacy...</p>
+              </div>
+            ) : reviews.length > 0 ? (
+              <ReviewGrid 
+                reviews={reviews} 
+                currentUserId={clerkUser?.id} 
+                onDelete={handleDeleteReview}
+              />
+            ) : (
+              <div className="py-20 text-center border-2 border-dashed border-slate-200 rounded-[2rem] w-full max-w-2xl mx-auto bg-white">
+                 <Quote className="h-12 w-12 text-slate-200 mx-auto mb-4" />
+                 <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Waiting for the first success story.</p>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-24 max-w-5xl mx-auto relative px-4 flex flex-col items-center">
+            <SignedIn>
+              <div className="text-center mb-10">
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">Impacted by NextStep?</h3>
+                <p className="text-slate-400 text-sm font-medium">Your story helps others unlock their potential.</p>
+              </div>
+              
+              <Dialog open={isReviewModalOpen} onOpenChange={setIsReviewModalOpen}>
+                <DialogTrigger asChild>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button size="lg" className="btn-premium-glow group h-16 rounded-[1.25rem] px-12 font-black text-lg shadow-2xl hover:shadow-primary/20 transition-all flex items-center gap-3">
+                      <span>Share Your Journey</span>
+                      <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </motion.div>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px] border-none bg-transparent shadow-none p-0 overflow-visible">
+                   <DialogHeader className="sr-only">
+                     <DialogTitle>Submit a Review</DialogTitle>
+                   </DialogHeader>
+                   <ReviewForm onSuccess={() => {
+                     setIsReviewModalOpen(false);
+                     fetchReviews();
+                   }} />
+                </DialogContent>
+              </Dialog>
+            </SignedIn>
+
+            <SignedOut>
+              <div className="card-premium p-12 md:p-20 text-center border border-slate-100 bg-white rounded-[3rem] shadow-xl relative group overflow-hidden w-full">
+                <h3 className="text-3xl md:text-4xl font-extrabold mb-4 tracking-tight">Ready to share your own success?</h3>
+                <p className="text-slate-500 text-lg mb-12 max-w-lg mx-auto font-medium leading-relaxed">
+                   Join an elite network of professionals and help others navigate their career journey by sharing your NextStep experience.
+                </p>
+                <SignInButton mode="modal">
+                  <Button size="lg" className="btn-premium-glow h-16 rounded-[1.25rem] px-12 font-black text-lg shadow-2xl">
+                    Sign In to Influence
+                  </Button>
+                </SignInButton>
+              </div>
+            </SignedOut>
+          </div>
         </div>
       </section>
 

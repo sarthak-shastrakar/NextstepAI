@@ -1,4 +1,5 @@
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Header from "@/components/Header";
@@ -26,9 +27,9 @@ export default function RootLayout({ children }) {
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning={true}>
 
-          {/* ✅ ADD HEAD SECTION */}
-        <head>
-          <Script
+        {/* ✅ ADD HEAD SECTION */}
+        {/* <head> */}
+        {/* <Script
             src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
             strategy="afterInteractive"
           />
@@ -41,8 +42,8 @@ export default function RootLayout({ children }) {
                 });
               });
             `}
-          </Script>
-        </head>
+          </Script> */}
+        {/* </head> */}
         <body className={`${inter.className}`}>
           <ThemeProvider
             attribute="class"
