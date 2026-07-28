@@ -1,6 +1,6 @@
-# 🚀 NextStep AI — AI-Powered Career Coach
+# 🚀 CareerForge AI — AI-Powered Career Coach
 
-NextStep AI is a sophisticated, AI-driven career coaching platform built with **Next.js 15**. It empowers users to build professional resumes, generate tailored cover letters, prepare for interviews, and gain real-time industry insights using state-of-the-art AI models like **Google Gemini** and **OpenRouter**.
+CareerForge AI is a sophisticated, AI-driven career coaching platform built with **Next.js 15**. It empowers users to build professional resumes, generate tailored cover letters, prepare for interviews, and gain real-time industry insights using state-of-the-art AI models like **Google Gemini** and **OpenRouter**.
 
 ---
 
