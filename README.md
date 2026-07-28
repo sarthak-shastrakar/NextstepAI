@@ -67,7 +67,6 @@ For a successful deployment on Vercel or any other platform, ensure the followin
 - `OPENROUTER_API_KEY`: OpenRouter API Key (for alternative models).
 
 ### 4. Media & Notifications
-- `RESEND_API_KEY`: API Key from Resend for emails.
 - `CLOUDINARY_CLOUD_NAME`: Cloudinary cloud name.
 - `CLOUDINARY_API_KEY`: Cloudinary API Key.
 - `CLOUDINARY_API_SECRET`: Cloudinary API Secret.
@@ -95,36 +94,6 @@ For a successful deployment on Vercel or any other platform, ensure the followin
 6.  **OAuth Redirects**:
     - Update your Google Cloud Console to include the new production callback URL: `https://your-app.vercel.app/api/auth/callback/google`.
 
----
-
-## 💻 Local Setup
-
-1.  **Clone the repository**:
-    ```bash
-    git clone <your-repo-url>
-    cd nextstepai
-    ```
-2.  **Install dependencies**:
-    ```bash
-    npm install
-    ```
-3.  **Setup `.env`**:
-    Create a `.env` file and fill in the keys mentioned above.
-4.  **Run Dev Server**:
-    ```bash
-    npm run dev
-    ```
-5.  **Open**: [http://localhost:3000](http://localhost:3000)
-
----
-
-## 📜 Scripts
-
-- `npm run dev`: Starts the development server.
-- `npm run build`: Builds the production application.
-- `npm run start`: Starts the built application.
-- `npm run lint`: Checks for linting errors.
-
----
+5.  **Open**: [https://careerforge2.vercel.app/]
 
 Developed with ❤️ by Sarthak Shastrakar.
